@@ -14,6 +14,10 @@ const app = express();
 
 app.use(bodyParser.json());
 
+app.get("/health", (req, res) => {
+  res.send("working");
+});
+
 // ===== SOCKET.IO FROM HERE ON OUT ===== //
 
 const io = socket(
@@ -64,9 +68,11 @@ io.on("connection", socket => {
   });
 
   // socket has disconnected
-  socket.on("disconnect", () => {
-    console.log("socket disconnecting");
+//   socket.on("disconnect", () => {
+//     // set a timer to remove the player from a game if they don't reconnect within a certain amount of time
+//     // the timer should cancel if the player reconnects
+//     console.log("socket disconnecting");
 
-    socket.disconnect(0);
-  });
+//     socket.disconnect(0);
+//   });
 });
