@@ -1,17 +1,18 @@
-const config = require("../../app.json");
+const config = require('../../app.json');
 
 class PlayerController {
-  constructor(team = "blue") {
+  constructor(team = 'blue', name) {
     this.id = this._generatePlayerId();
-    this.team = team;
+    this.team = team || 'blue';
     this.position = this.generateInitialPosition();
     this.health = config.playerStartingHealth;
+    this.name = name;
   }
 
   _generatePlayerId() {
     let alphabet =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
-    let playerId = "";
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+    let playerId = '';
 
     while (playerId.length <= config.playerIdLength) {
       playerId = playerId + alphabet[~~(Math.random() * alphabet.length - 1)];
@@ -24,7 +25,7 @@ class PlayerController {
     let xPos = ~~(Math.random() * 20);
     let yPos = ~~(Math.random() * 5);
 
-    if (this.team !== "blue") {
+    if (this.team !== 'blue') {
       xPos = 100 - xPos;
       yPos = 100 - yPos;
     }
@@ -36,8 +37,8 @@ class PlayerController {
   }
 
   move(movement, xPos, yPos) {
-    if (!["jump", "left", "right"].includes(movement)) {
-      throw "Invalid movement type";
+    if (!['jump', 'left', 'right'].includes(movement)) {
+      throw 'Invalid movement type';
     }
   }
 }

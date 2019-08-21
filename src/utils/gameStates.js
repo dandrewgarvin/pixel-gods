@@ -1,0 +1,8 @@
+module.exports = {
+  WAITING: 'WAITING',
+  PAUSED: 'PAUSED',
+  BLUETURN: 'BLUE_TURN',
+  REDTURN: 'RED_TURN',
+  BLUEWIN: 'BLUE_WIN',
+  REDWIN: 'RED_WIN'
+};

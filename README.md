@@ -1,14 +1,14 @@
 # TODO
 
 ## APP
-- Find pixel artwork for character and map
-- Create player abilities
-- Create player movements
-- Create health
-- Create turn
-- Create starting menu
-- Create end-game state
-- Create share sheet
+- [x] Find pixel artwork for character and map
+- [] Create player abilities
+- [] Create player movements
+- [] Create health
+- [] Create turn
+- [] Create starting menu
+- [] Create end-game state
+- [] Create share sheet
 
 ## SEVER
 

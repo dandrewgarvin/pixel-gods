@@ -1,11 +1,11 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const socket = require("socket.io");
-const config = require("../app.json");
+const express = require('express');
+const bodyParser = require('body-parser');
+const socket = require('socket.io');
+const config = require('../app.json');
 
-const GameInstanceController = require("./controllers/GameInstanceController");
-const GameController = require("./controllers/GameController");
-const PlayerController = require("./controllers/PlayerController");
+const GameInstanceController = require('./controllers/GameInstanceController');
+const GameController = require('./controllers/GameController');
+const PlayerController = require('./controllers/PlayerController');
 
 const { port, maxPlayers } = config;
 let GameInstances = new GameInstanceController(); // array of all active games
@@ -14,8 +14,8 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.get("/health", (req, res) => {
-  res.send("working");
+app.get('/health', (req, res) => {
+  res.send('working');
 });
 
 // ===== SOCKET.IO FROM HERE ON OUT ===== //
@@ -25,54 +25,58 @@ const io = socket(
 );
 
 // ===== This is where all of our socket 'endpoints' are going to be ===== //
-io.on("connection", socket => {
-  console.log("connection made");
-  // sends to just the original sender
-  // create (host) game
-  socket.on("create game", input => {
-    const current = GameInstances.createGameInstance();
+io.on('connection', socket => {
+  console.log('connection made');
+  // if user was previously connected to a live game, reconnect them to the game
 
-    console.log("CREATE GAME", current);
+  // create (host) game
+  socket.on('create game', playerName => {
+    const current = GameInstances.createGameInstance(playerName);
+    console.log('instances:', GameInstances.instances.length);
+
+    console.log('CREATE GAME', current.gameCode);
     socket.join(current.gameCode);
-    socket.emit("created game", current);
+    socket.emit('created game', current);
   });
 
   // join existing game
-  socket.on("join game", input => {
-    console.log("input on joined game", input);
+  socket.on('join game', input => {
+    console.log('input on joined game', input);
     const current = GameInstances.findGameInstance(input.gameCode);
-    console.log("current", current);
+    console.log('current', current);
 
     if (current) {
       current.gameInstance.addPlayer();
 
-      console.log("joined game instance:", current);
+      console.log('joined game instance:', current);
       socket.join(current.gameCode);
     }
 
-    socket.emit("joined game", JSON.stringify(current));
+    socket.emit('joined game', JSON.stringify(current));
   });
+
+  socket.on('start game', gameCode => {});
 
   // sends to everyone but original sender
-  socket.on("broadcast message", input => {
-    socket.broadcast.emit("generate response", input);
+  socket.on('broadcast message', input => {
+    socket.broadcast.emit('generate response', input);
   });
 
-  socket.on("blast message", input => {
-    io.sockets.emit("generate response", input);
+  socket.on('blast message', input => {
+    io.sockets.emit('generate response', input);
   });
 
   // joins the specified room
-  socket.on("join room", input => {
-    socket.join(input.path.split("/")[1]);
+  socket.on('join room', input => {
+    socket.join(input.path.split('/')[1]);
   });
 
   // socket has disconnected
-//   socket.on("disconnect", () => {
-//     // set a timer to remove the player from a game if they don't reconnect within a certain amount of time
-//     // the timer should cancel if the player reconnects
-//     console.log("socket disconnecting");
+  //   socket.on("disconnect", () => {
+  //     // set a timer to remove the player from a game if they don't reconnect within a certain amount of time
+  //     // the timer should cancel if the player reconnects
+  //     console.log("socket disconnecting");
 
-//     socket.disconnect(0);
-//   });
+  //     socket.disconnect(0);
+  //   });
 });

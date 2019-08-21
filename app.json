@@ -3,5 +3,7 @@
   "maxPlayers": 2,
   "codeLength": 4,
   "playerIdLength": 8,
-  "playerStartingHealth": 100
+  "playerStartingHealth": 100,
+  "gameInstanceTimeout": 900000,
+  "checkTimeoutInterval": 15000
 }
