@@ -20,16 +20,30 @@ class GameController {
     }, config.checkTimeoutInterval);
   }
 
-  addPlayer(player = null) {
+  addPlayer(player = null, playerName) {
     // player object has been passed in
     if (player instanceof PlayerController) {
       this.players.push(player);
     } else {
-      player = new PlayerController('red');
+      player = new PlayerController('red', playerName);
       this.players.push(player);
     }
 
     return player;
+  }
+
+  removePlayer(playerId) {
+    if (!playerId) {
+      return null;
+    } else {
+      this.players = this.players.filter(player => player.id !== playerId);
+    }
+
+    return this.players;
+  }
+
+  resetTimeout(newTimeout = config.gameInstanceTimeout) {
+    this.timeout = newTimeout;
   }
 }
 

@@ -64,8 +64,7 @@ class GameInstanceController {
   }
 
   _generateGameCode() {
-    let alphabet =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+    let alphabet = '1234567890';
     let code = '';
 
     while (code.length < config.codeLength) {
@@ -76,11 +75,11 @@ class GameInstanceController {
   }
 
   findGameInstance(gameCode) {
-    const instance = this.instances.filter(
-      instance => instance.gameCode !== gameCode
+    const instance = this.instances.find(
+      instance => instance.gameCode === gameCode
     );
 
-    return instance[0];
+    return instance;
   }
 
   removeGameInstance(gameCode) {

@@ -22,3 +22,4 @@
     5. Player attack (updated players health)
     6. Which players turn is it
     7. End game (who won, who lost)
+    8. leave game

@@ -4,8 +4,7 @@ const socket = require('socket.io');
 const config = require('../app.json');
 
 const GameInstanceController = require('./controllers/GameInstanceController');
-const GameController = require('./controllers/GameController');
-const PlayerController = require('./controllers/PlayerController');
+const ERROR = require('./ErrorHandling/ERROR');
 
 const { port, maxPlayers } = config;
 let GameInstances = new GameInstanceController(); // array of all active games
@@ -40,19 +39,42 @@ io.on('connection', socket => {
   });
 
   // join existing game
-  socket.on('join game', input => {
-    console.log('input on joined game', input);
-    const current = GameInstances.findGameInstance(input.gameCode);
+  socket.on('join game', (playerName, gameCode) => {
+    try {
+      console.log('input on joined game', playerName, gameCode);
+      const current = GameInstances.findGameInstance(gameCode);
+      console.log('current', current);
+
+      if (current) {
+        current.gameInstance.addPlayer('red', playerName);
+        current.gameInstance.resetTimeout(); // start the timeout over since an action has been done
+
+        console.log('joined game instance:', current.gameInstance);
+        socket.join(current.gameCode);
+        socket.emit('joined game', current);
+      } else {
+        throw ERROR.GAME_NOT_FOUND;
+      }
+    } catch (err) {
+      console.log('err', err);
+      socket.emit('game error', err);
+    }
+  });
+
+  // leave current game
+  socket.on('leave game', (gameCode, playerId) => {
+    console.log('gameCode', gameCode);
+    console.log('playerId', playerId);
+
+    let current = GameInstances.findGameInstance(gameCode);
     console.log('current', current);
 
-    if (current) {
-      current.gameInstance.addPlayer();
+    current.removePlayer(playerId);
 
-      console.log('joined game instance:', current);
-      socket.join(current.gameCode);
-    }
+    console.log('current after player removal', current);
 
-    socket.emit('joined game', JSON.stringify(current));
+    socket.leave(gameCode);
+    socket.to(gameCode).emit('left game');
   });
 
   socket.on('start game', gameCode => {});
