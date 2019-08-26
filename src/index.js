@@ -31,9 +31,12 @@ io.on('connection', socket => {
   // create (host) game
   socket.on('create game', playerName => {
     const current = GameInstances.createGameInstance(playerName);
+    const playerId = current.gameInstance.players[0].id;
+    current.playerId = playerId;
     console.log('instances:', GameInstances.instances.length);
 
     console.log('CREATE GAME', current.gameCode);
+
     socket.join(current.gameCode);
     socket.emit('created game', current);
   });
@@ -41,43 +44,40 @@ io.on('connection', socket => {
   // join existing game
   socket.on('join game', (playerName, gameCode) => {
     try {
-      console.log('input on joined game', playerName, gameCode);
       const current = GameInstances.findGameInstance(gameCode);
-      console.log('current', current);
 
       if (current) {
-        current.gameInstance.addPlayer('red', playerName);
+        const player = current.gameInstance.addPlayer(null, playerName);
+        current.playerId = player.id;
         current.gameInstance.resetTimeout(); // start the timeout over since an action has been done
 
-        console.log('joined game instance:', current.gameInstance);
+        console.log('joined game instance:', current.gameCode);
         socket.join(current.gameCode);
         socket.emit('joined game', current);
       } else {
         throw ERROR.GAME_NOT_FOUND;
       }
     } catch (err) {
-      console.log('err', err);
       socket.emit('game error', err);
     }
   });
 
   // leave current game
-  socket.on('leave game', (gameCode, playerId) => {
-    console.log('gameCode', gameCode);
-    console.log('playerId', playerId);
+  socket.on('leave game', leaveGame);
+  function leaveGame([gameCode, playerId]) {    
+    console.log('gameCode, playerId', gameCode, playerId);
 
     let current = GameInstances.findGameInstance(gameCode);
-    console.log('current', current);
+    console.log('current before removal', current.gameInstance.players.length);
 
-    current.removePlayer(playerId);
+    current.gameInstance.removePlayer(playerId);
 
-    console.log('current after player removal', current);
-
+    io.in(gameCode).emit('left game');
     socket.leave(gameCode);
-    socket.to(gameCode).emit('left game');
-  });
+  }
 
-  socket.on('start game', gameCode => {});
+  socket.on('start game', startGame);
+  function startGame(gameCode) {}
 
   // sends to everyone but original sender
   socket.on('broadcast message', input => {

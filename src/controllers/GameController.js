@@ -25,7 +25,18 @@ class GameController {
     if (player instanceof PlayerController) {
       this.players.push(player);
     } else {
-      player = new PlayerController('red', playerName);
+      // add player to team with least amount of players
+      let redCount = 0;
+      let blueCount = 0;
+      this.players.forEach(player => {
+        if (player.team === 'red') redCount++;
+        if (player.team === 'blue') blueCount++;
+      });
+
+      player = new PlayerController(
+        blueCount <= redCount ? 'blue' : 'red',
+        playerName
+      );
       this.players.push(player);
     }
 
