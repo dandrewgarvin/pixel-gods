@@ -65,15 +65,12 @@ class GameInstanceController {
 
     let players = currentInstance.gameInstance.players;
 
-    console.log('currentInstance', currentInstance.gameInstance);
     if (players.length > 1) {
       const newPlayers = randomizeStartingOrder(players);
 
-      console.log('newPlayers', newPlayers);
+      currentInstance.players = newPlayers;
 
-      currentInstance.gameState = startingPlayer
-        ? gameStates.BLUETURN
-        : gameStates.REDTURN;
+      return currentInstance;
     } else {
       return null;
     }

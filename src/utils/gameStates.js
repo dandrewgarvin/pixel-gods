@@ -1,6 +1,7 @@
 module.exports = {
   WAITING: 'WAITING',
   PAUSED: 'PAUSED',
+  STARTED: 'STARTED',
   BLUETURN: 'BLUE_TURN',
   REDTURN: 'RED_TURN',
   BLUEWIN: 'BLUE_WIN',

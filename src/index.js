@@ -5,6 +5,7 @@ const config = require('../app.json');
 
 const GameInstanceController = require('./controllers/GameInstanceController');
 const ERROR = require('./ErrorHandling/ERROR');
+const GAME_STATES = require('./utils/gameStates');
 
 const { port, maxPlayers } = config;
 let GameInstances = new GameInstanceController(); // array of all active games
@@ -96,10 +97,11 @@ io.on('connection', socket => {
     let current = GameInstances.findGameInstance(gameCode);
 
     const startedGame = GameInstances.startGameInstance(current);
-    console.log('startedGame', startedGame);
-    
+    const firstPlayer = startedGame.players[0];
+    startedGame.gameState = GAME_STATES.STARTED;
 
-    // io.in(gameCode).emit('new turn', playerId);
+    io.in(gameCode).emit('new turn', startedGame); // let whole room know it's a players turn
+    io.to(firstPlayer.id).emit('your turn'); // let individual player know it's their turn
   }
 
   socket.on('finish turn', finishTurn);
