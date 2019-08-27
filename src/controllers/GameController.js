@@ -2,8 +2,14 @@ const config = require('../../app.json');
 const PlayerController = require('./PlayerController');
 
 class GameController {
-  constructor(playerName, handleTimeout, removeGameInstance, gameCode) {
-    const player1 = new PlayerController('blue', playerName); // host
+  constructor(
+    playerName,
+    playerId,
+    handleTimeout,
+    removeGameInstance,
+    gameCode
+  ) {
+    const player1 = new PlayerController('blue', playerName, playerId, true); // host
     this.players = [player1];
     this.timeout = config.gameInstanceTimeout;
     this.handleTimeout = handleTimeout;
@@ -20,7 +26,7 @@ class GameController {
     }, config.checkTimeoutInterval);
   }
 
-  addPlayer(player = null, playerName) {
+  addPlayer(player = null, playerName, playerId) {
     // player object has been passed in
     if (player instanceof PlayerController) {
       this.players.push(player);
@@ -35,7 +41,9 @@ class GameController {
 
       player = new PlayerController(
         blueCount <= redCount ? 'blue' : 'red',
-        playerName
+        playerName,
+        playerId,
+        false // player is not host
       );
       this.players.push(player);
     }

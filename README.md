@@ -30,3 +30,4 @@
 - [x] Test that socket rooms are working
 - [] add express sessions ?
 - [x] adding players to a game should switch back and forth between red and blue teams to prep for more players in a game
+- [] make sure adding new properties doesnt break the client

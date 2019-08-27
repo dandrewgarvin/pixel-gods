@@ -25,20 +25,28 @@ const io = socket(
 
 // ===== This is where all of our socket 'endpoints' are going to be ===== //
 io.on('connection', socket => {
-  console.log('connection made');
+  console.log(
+    `Socket ${socket.id} has connected from address ${socket.handshake.address}.`
+  );
   // if user was previously connected to a live game, reconnect them to the game
 
   // create (host) game
   socket.on('create game', playerName => {
-    const current = GameInstances.createGameInstance(playerName);
+    const current = GameInstances.createGameInstance(playerName, socket.id);
     const playerId = current.gameInstance.players[0].id;
     current.playerId = playerId;
-    console.log('instances:', GameInstances.instances.length);
 
-    console.log('CREATE GAME', current.gameCode);
+    console.log(
+      `Player ${current.playerId} is hosting game ${current.gameCode}`
+    );
 
     socket.join(current.gameCode);
     socket.emit('created game', current);
+
+    if (socket.handshake.address === '::ffff:10.101.3.96') {
+      console.log('Master is calling!');
+      startGame('DEV');
+    }
   });
 
   // join existing game
@@ -47,11 +55,17 @@ io.on('connection', socket => {
       const current = GameInstances.findGameInstance(gameCode);
 
       if (current) {
-        const player = current.gameInstance.addPlayer(null, playerName);
+        const player = current.gameInstance.addPlayer(
+          null,
+          playerName,
+          socket.id
+        );
         current.playerId = player.id;
         current.gameInstance.resetTimeout(); // start the timeout over since an action has been done
 
-        console.log('joined game instance:', current.gameCode);
+        console.log(
+          `Player ${current.playerId} has joined game ${current.gameCode}`
+        );
         socket.join(current.gameCode);
         socket.emit('joined game', current);
       } else {
@@ -64,20 +78,32 @@ io.on('connection', socket => {
 
   // leave current game
   socket.on('leave game', leaveGame);
-  function leaveGame([gameCode, playerId]) {    
-    console.log('gameCode, playerId', gameCode, playerId);
+  function leaveGame([gameCode, playerId]) {
+    console.log(`Player ${playerId} has left game ${gameCode}`);
 
     let current = GameInstances.findGameInstance(gameCode);
-    console.log('current before removal', current.gameInstance.players.length);
 
     current.gameInstance.removePlayer(playerId);
+
+    current.gameInstance.resetTimeout(); // start the timeout over since an action has been done
 
     io.in(gameCode).emit('left game');
     socket.leave(gameCode);
   }
 
   socket.on('start game', startGame);
-  function startGame(gameCode) {}
+  function startGame(gameCode) {
+    let current = GameInstances.findGameInstance(gameCode);
+
+    const startedGame = GameInstances.startGameInstance(current);
+    console.log('startedGame', startedGame);
+    
+
+    // io.in(gameCode).emit('new turn', playerId);
+  }
+
+  socket.on('finish turn', finishTurn);
+  function finishTurn() {}
 
   // sends to everyone but original sender
   socket.on('broadcast message', input => {
@@ -92,13 +118,4 @@ io.on('connection', socket => {
   socket.on('join room', input => {
     socket.join(input.path.split('/')[1]);
   });
-
-  // socket has disconnected
-  //   socket.on("disconnect", () => {
-  //     // set a timer to remove the player from a game if they don't reconnect within a certain amount of time
-  //     // the timer should cancel if the player reconnects
-  //     console.log("socket disconnecting");
-
-  //     socket.disconnect(0);
-  //   });
 });

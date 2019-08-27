@@ -1,12 +1,13 @@
 const config = require('../../app.json');
 
 class PlayerController {
-  constructor(team = 'blue', name) {
-    this.id = this._generatePlayerId();
+  constructor(team = 'blue', name, playerId, isHost = false) {
+    this.id = playerId || this._generatePlayerId();
     this.team = team || 'blue';
     this.position = this.generateInitialPosition();
     this.health = config.playerStartingHealth;
     this.name = name;
+    this.isHost = isHost;
   }
 
   _generatePlayerId() {

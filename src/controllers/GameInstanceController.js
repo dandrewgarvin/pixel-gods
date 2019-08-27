@@ -1,6 +1,7 @@
 const config = require('../../app.json');
 const gameStates = require('../utils/gameStates');
 const GameController = require('./GameController');
+const randomizeStartingOrder = require('../utils/randomizeStartingOrder');
 
 class GameInstanceController {
   constructor() {
@@ -9,7 +10,7 @@ class GameInstanceController {
     this.removeGameInstance = this.removeGameInstance.bind(this);
   }
 
-  createGameInstance(playerName) {
+  createGameInstance(playerName, playerId) {
     let isUniqueCode = false;
 
     // generateGameCode
@@ -31,6 +32,7 @@ class GameInstanceController {
 
     const gameInstance = new GameController(
       playerName,
+      playerId,
       this.checkGameInstanceTimeout,
       this.removeGameInstance,
       gameCode
@@ -53,8 +55,22 @@ class GameInstanceController {
       throw 'Unable to find game instance. Please make sure you send the right code';
     }
 
-    if (currentInstance.gameInstance.players.length > 1) {
-      const startingPlayer = ~~(Math.random() * 1);
+    // DEV
+    if (currentInstance.gameInstance.players.length === 1) {
+      // make new players to add to game while testing
+      currentInstance.gameInstance.addPlayer(null, 'player2', 'player2');
+      currentInstance.gameInstance.addPlayer(null, 'player3', 'player3');
+      currentInstance.gameInstance.addPlayer(null, 'player4', 'player4');
+    }
+
+    let players = currentInstance.gameInstance.players;
+
+    console.log('currentInstance', currentInstance.gameInstance);
+    if (players.length > 1) {
+      const newPlayers = randomizeStartingOrder(players);
+
+      console.log('newPlayers', newPlayers);
+
       currentInstance.gameState = startingPlayer
         ? gameStates.BLUETURN
         : gameStates.REDTURN;
@@ -75,9 +91,16 @@ class GameInstanceController {
   }
 
   findGameInstance(gameCode) {
-    const instance = this.instances.find(
-      instance => instance.gameCode === gameCode
-    );
+    let instance;
+
+    // while in development, this will only grab the first instance
+    if (gameCode === 'DEV') {
+      instance = this.instances[0];
+    } else {
+      instance = this.instances.find(
+        instance => instance.gameCode === gameCode
+      );
+    }
 
     return instance;
   }
