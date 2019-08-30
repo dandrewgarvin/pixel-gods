@@ -29,7 +29,7 @@ io.on('connection', socket => {
   console.log(
     `Socket ${socket.id} has connected from address ${socket.handshake.address}.`
   );
-  // if user was previously connected to a live game, reconnect them to the game
+  // TODO: if user was previously connected to a live game, reconnect them to the game
 
   // create (host) game
   socket.on('create game', playerName => {
@@ -43,11 +43,6 @@ io.on('connection', socket => {
 
     socket.join(current.gameCode);
     socket.emit('created game', current);
-
-    if (socket.handshake.address === '::ffff:10.101.3.96') {
-      console.log('Master is calling!');
-      startGame('DEV');
-    }
   });
 
   // join existing game
@@ -68,7 +63,12 @@ io.on('connection', socket => {
           `Player ${current.playerId} has joined game ${current.gameCode}`
         );
         socket.join(current.gameCode);
-        socket.emit('joined game', current);
+        io.in(current.gameCode).emit('joined game', current);
+
+        setTimeout(() => {
+          console.log('starting game in timeout');
+          startGame(current.gameCode);
+        }, 2000);
       } else {
         throw ERROR.GAME_NOT_FOUND;
       }
@@ -93,15 +93,21 @@ io.on('connection', socket => {
   }
 
   socket.on('start game', startGame);
-  function startGame(gameCode) {
+  async function startGame(gameCode) {
+    console.log('starting game');
     let current = GameInstances.findGameInstance(gameCode);
 
-    const startedGame = GameInstances.startGameInstance(current);
+    let startedGame = GameInstances.startGameInstance(current);
+
     const firstPlayer = startedGame.players[0];
     startedGame.gameState = GAME_STATES.STARTED;
 
-    io.in(gameCode).emit('new turn', startedGame); // let whole room know it's a players turn
-    io.to(firstPlayer.id).emit('your turn'); // let individual player know it's their turn
+    console.log(
+      `First player in game ${current.gameCode} is ${firstPlayer.id}`
+    );
+
+    await io.in(gameCode).emit('game started'); // let whole room the game has started
+    io.in(gameCode).emit('new turn', firstPlayer.id); // let room who whos turn it is
   }
 
   socket.on('finish turn', finishTurn);

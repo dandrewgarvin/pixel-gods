@@ -20,7 +20,6 @@ module.exports = function randomizeStartingOrder(players) {
     delete teams[team];
 
     // sort players in each team by playerId
-
     teams[scrambled] = teams[scrambled].sort((a, b) => {
       if (a.id > b.id) return 1;
       if (a.id < b.id) return -1;
@@ -28,15 +27,22 @@ module.exports = function randomizeStartingOrder(players) {
     });
   }
 
-  // map over team object, pulling first player from each team until all teams are empty
-  while (Object.keys(teams).length) {
-    for (team in teams) {
-      if (!teams[team].length) {
-        delete teams[team];
-      } else {
-        newPlayers.push(teams[team][0]);
+  let sortedTeams = {};
+  Object.keys(teams)
+    .sort()
+    .forEach(key => {
+      sortedTeams[key] = teams[key];
+    });
 
-        teams[team].shift();
+  // map over team object, pulling first player from each team until all teams are empty
+  while (Object.keys(sortedTeams).length) {
+    for (team in sortedTeams) {
+      if (!sortedTeams[team].length) {
+        delete sortedTeams[team];
+      } else {
+        newPlayers.push(sortedTeams[team][0]);
+
+        sortedTeams[team].shift();
       }
     }
   }
