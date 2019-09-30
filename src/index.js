@@ -7,7 +7,7 @@ const GameInstanceController = require('./controllers/GameInstanceController');
 const ERROR = require('./ErrorHandling/ERROR');
 const GAME_STATES = require('./utils/gameStates');
 
-const { port, maxPlayers } = config;
+const { port } = config;
 let GameInstances = new GameInstanceController(); // array of all active games
 
 const app = express();
@@ -32,7 +32,8 @@ io.on('connection', socket => {
   // TODO: if user was previously connected to a live game, reconnect them to the game
 
   // create (host) game
-  socket.on('create game', playerName => {
+  socket.on('create game', createGame);
+  async function createGame(playerName) {
     const current = GameInstances.createGameInstance(playerName, socket.id);
     const playerId = current.gameInstance.players[0].id;
     current.playerId = playerId;
@@ -43,10 +44,11 @@ io.on('connection', socket => {
 
     socket.join(current.gameCode);
     socket.emit('created game', current);
-  });
+  }
 
   // join existing game
-  socket.on('join game', (playerName, gameCode) => {
+  socket.on('join game', joinGame);
+  async function joinGame(playerName, gameCode) {
     try {
       const current = GameInstances.findGameInstance(gameCode);
 
@@ -62,20 +64,16 @@ io.on('connection', socket => {
         console.log(
           `Player ${current.playerId} has joined game ${current.gameCode}`
         );
+
         socket.join(current.gameCode);
         io.in(current.gameCode).emit('joined game', current);
-
-        setTimeout(() => {
-          console.log('starting game in timeout');
-          startGame(current.gameCode);
-        }, 2000);
       } else {
         throw ERROR.GAME_NOT_FOUND;
       }
     } catch (err) {
       socket.emit('game error', err);
     }
-  });
+  }
 
   // leave current game
   socket.on('leave game', leaveGame);
@@ -88,26 +86,35 @@ io.on('connection', socket => {
 
     current.gameInstance.resetTimeout(); // start the timeout over since an action has been done
 
-    io.in(gameCode).emit('left game');
+    io.in(gameCode).emit('left game', current);
     socket.leave(gameCode);
   }
 
+  // start game
   socket.on('start game', startGame);
   async function startGame(gameCode) {
-    console.log('starting game');
+    console.log('starting game', gameCode);
     let current = GameInstances.findGameInstance(gameCode);
+
+    // only host can start game
+    if (!current.gameInstance.players.find(player => player.id).isHost) {
+      return socket.emit('game error', ERROR.ONLY_HOST_STARTS_GAME);
+    }
 
     let startedGame = GameInstances.startGameInstance(current);
 
-    const firstPlayer = startedGame.players[0];
+    const firstPlayer = startedGame.gameInstance.players[0];
+
     startedGame.gameState = GAME_STATES.STARTED;
 
+    current.gameInstance.resetTimeout(); // start the timeout over since an action has been done
+
     console.log(
-      `First player in game ${current.gameCode} is ${firstPlayer.id}`
+      `First player in game ${current.gameCode} is ${firstPlayer.id} - ${firstPlayer.name}`
     );
 
     await io.in(gameCode).emit('game started'); // let whole room the game has started
-    io.in(gameCode).emit('new turn', firstPlayer.id); // let room who whos turn it is
+    io.in(gameCode).emit('new turn', firstPlayer.id); // let room know who whos turn it is
   }
 
   socket.on('finish turn', finishTurn);
@@ -120,10 +127,5 @@ io.on('connection', socket => {
 
   socket.on('blast message', input => {
     io.sockets.emit('generate response', input);
-  });
-
-  // joins the specified room
-  socket.on('join room', input => {
-    socket.join(input.path.split('/')[1]);
   });
 });

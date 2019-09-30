@@ -1,4 +1,5 @@
 const config = require('../../app.json');
+const ERROR = require('../ErrorHandling/ERROR');
 
 class PlayerController {
   constructor(team = 'blue', name, playerId, isHost = false) {
@@ -23,12 +24,14 @@ class PlayerController {
   }
 
   generateInitialPosition() {
-    let xPos = ~~(Math.random() * 20);
-    let yPos = ~~(Math.random() * 5);
+    // let xPos = ~~(Math.random() * 20);
+    // let yPos = ~~(Math.random() * 5);
+    let xPos = -276.617;
+    let yPos = -59.888;
 
     if (this.team !== 'blue') {
-      xPos = 100 - xPos;
-      yPos = 100 - yPos;
+      xPos = 880;
+      // yPos = 100 - yPos;
     }
 
     return {
@@ -39,7 +42,7 @@ class PlayerController {
 
   move(movement, xPos, yPos) {
     if (!['jump', 'left', 'right'].includes(movement)) {
-      throw 'Invalid movement type';
+      throw ERROR.INVALID_PLAYER_MOVEMENT;
     }
   }
 }

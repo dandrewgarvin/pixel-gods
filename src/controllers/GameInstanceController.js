@@ -1,5 +1,6 @@
 const config = require('../../app.json');
-const gameStates = require('../utils/gameStates');
+const GAME_STATES = require('../utils/gameStates');
+const ERROR = require('../ErrorHandling/ERROR');
 const GameController = require('./GameController');
 const randomizeStartingOrder = require('../utils/randomizeStartingOrder');
 
@@ -41,7 +42,7 @@ class GameInstanceController {
     const newInstance = {
       gameCode,
       gameInstance,
-      gameState: gameStates.WAITING
+      gameState: GAME_STATES.WAITING
     };
 
     // add code to instances and return to caller
@@ -52,15 +53,7 @@ class GameInstanceController {
 
   startGameInstance(currentInstance) {
     if (!currentInstance) {
-      throw 'Unable to find game instance. Please make sure you send the right code';
-    }
-
-    // DEV
-    if (currentInstance.gameInstance.players.length === 1) {
-      // make new players to add to game while testing
-      currentInstance.gameInstance.addPlayer(null, 'player2', 'player2');
-      currentInstance.gameInstance.addPlayer(null, 'player3', 'player3');
-      currentInstance.gameInstance.addPlayer(null, 'player4', 'player4');
+      throw ERROR.GAME_NOT_FOUND;
     }
 
     let players = currentInstance.gameInstance.players;
@@ -68,7 +61,8 @@ class GameInstanceController {
     if (players.length > 1) {
       const newPlayers = randomizeStartingOrder(players);
 
-      currentInstance.players = newPlayers;
+      currentInstance.gameInstance.players = newPlayers;
+      currentInstance.gameInstance.currentPlayerTurnId = newPlayers[0].id;
 
       return currentInstance;
     } else {

@@ -11,8 +11,13 @@ class GameController {
   ) {
     const player1 = new PlayerController('blue', playerName, playerId, true); // host
     this.players = [player1];
+
     this.timeout = config.gameInstanceTimeout;
     this.handleTimeout = handleTimeout;
+
+    this.currentPlayerTurnId = null; // the current player who's turn it is
+    this.playerTurnTimer = null; // how much time the player has left
+    this.playerTurnInterval = null; // the setInterval that should be cleared (reset) when it's another players turn
 
     let timeoutInterval = setInterval(() => {
       let newTimeout = this.handleTimeout(this, () =>

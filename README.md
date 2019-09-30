@@ -23,11 +23,11 @@
     6. Which players turn is it
     7. End game (who won, who lost)
     8. leave game
+    9. Rejoin Game (reconnect)
 
 
 ## TODO:
 - [x] Add currentPlayer for hosting and joining games so front end knows who they are
 - [x] Test that socket rooms are working
-- [] add express sessions ?
 - [x] adding players to a game should switch back and forth between red and blue teams to prep for more players in a game
-- [] make sure adding new properties doesnt break the client
+- [x] make sure adding new properties doesnt break the client
